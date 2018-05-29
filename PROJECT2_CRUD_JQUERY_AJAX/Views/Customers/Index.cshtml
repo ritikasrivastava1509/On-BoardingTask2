@@ -1,0 +1,283 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+<script src="~/Scripts/bootstrap.min.js"></script>
+<h2>Customer</h2>
+<div class="container" style="margin-top:3%">
+    <a href="#" class="btn btn-primary" data-target="#MyCustomer" data-toggle="modal"> Add New Customer</a> <br> <br />
+
+    @*for designing the popup modal with bootstrap classes*@
+
+    <div class="modal fade" id="MyCustomer">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h4 id="ModalTitle">Customer</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="formCustomer">
+                        <div class="form-group">
+                            @Html.Hidden("ID", null, new { @id = "CustomerID", @class = "form-contorl", @placeholder = "ID*", })
+                            </div>
+                            <div class="form-group">
+                                @Html.TextBox("Name", null, new { @id = "CustomerName", @class = "form-contorl", @placeholder = "Name*" })<br />
+                            </div>
+                            <div class="form-group">
+                                @Html.TextBox("Address", null, new { @id = "Address", @class = "form-contorl", @placeholder = "Address*" })<br />
+
+                            </div>
+                    </form>
+                </div>
+
+                
+                <div style="text-align:center;display:none" id="loaderDiv">
+                    <img src="~/Content/loader.gif" width="250" />
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input type="reset" onclick="AddNewCustomer()" value="Submit" class="btn btn-success" id="btnSubmit" />
+                </div>
+
+            </div>>
+        </div>
+    </div>
+    <div class="modal fade" id="MyCustomerEdit">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h4>Customer Edit</h4>
+                </div>
+                <div class="modal-body">
+                    @*@using (Html.BeginForm())
+                        {
+                            @Html.AntiForgeryToken()*@
+                    <form id="formEditCustomer">
+                        @*@Html.ValidationSummary(true, "", new { @class = "text-danger" })*@
+                        @Html.Hidden("ID", null, new { @id = "EditCustomerID", @class = "form-contorl", @placeholder = "ID*",  })
+                        @*for adding the table columns in the form of textbox to the popup using html.textbox*@
+                        <div class="form-group">
+                            @Html.TextBox("Name", null, new { @id = "EditCustomerName", @class = "form-contorl", @placeholder = "Name*", MinLengthAttributeAdapter = "3", MaxLengthAttributeAdapter="10" })<br />
+                        </div>
+
+                        <div class="form-group">
+                            @Html.TextBox("Address", null, new { @id = "EditCustomerAddress", @class = "form-contorl", @placeholder = "Address*", MinLengthAttributeAdapter="3", MaxLengthAttributeAdapter="50" })<br />
+                        </div>
+
+                        
+                        <div style="text-align:center;display:none" id="loaderDivEdit">
+                            <img src="~/Content/loader.gif" width="250" />
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                            <input type="reset" onclick="SaveCustomer()" value="Submit" class="btn btn-success" id="btnSubmit" />
+                        </div>
+                    </form>
+                    @*}*@
+                </div>
+            </div>>
+        </div>
+    </div>
+
+    <div class="modal fade" id="MyCustomerDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h4>Customer Delete</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="formDeleteCustomer">
+                        @Html.Hidden("ID", null, new { @id = "DeleteCustomerID", @class = "form-contorl", @placeholder = "ID*" })
+                        
+                        <dl class="dl-horizontal">
+                            <dt>
+                                <label id="errorMessage"></label>
+                            </dt>
+                            <dd>
+                                <label id="errorMessageText"></label>
+                            </dd>
+                            <dt>
+                                <label>Name</label>
+                            </dt>
+                            <dd>
+                                <label id="DeleteCustomerName"></label>
+
+
+                            </dd>
+                            <dt>
+                                <label>Address</label>
+                            </dt>
+                            <dd>
+                                <label id="DeleteCustomerAddress"></label>
+                            </dd>
+
+                        </dl>
+                        @*for displaying the loading windows, by default the style has to be set as display:none*@
+                        <div class="modal-footer">
+                            <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                            <input type="submit" onclick="DeleteCustomer()" value="Delete" class="btn btn-success" id="btnSubmit" />
+                        </div>
+                    </form>
+                </div>
+            </div>>
+        </div>
+    </div>
+</div>
+<table class="table">
+    <tr>
+        <th>
+            Name
+        </th>
+        <th>
+            Address
+        </th>
+        <th></th>
+    </tr>
+    <tbody id="customerList"></tbody>
+</table>
+<script>
+    //For binding the data using jquery and creating html at runtime based on the data receievd from the server
+    $.get("/Customers/GetCustomerList", null, BindCustomerData);
+
+    // Binding the customer list on the landing page
+    function BindCustomerData(customerlist) {
+       
+        var SetData = $("#customerList");
+        for (var i = 0; i < customerlist.length; i++) {
+            // for creating row using jquery and populating values to the table rows.
+            var Data = "<tr Class ='row_" + customerlist[i].ID + "'>" +
+                "<td> " + customerlist[i].Name + "</td> " +
+                "<td> " + customerlist[i].Address + "</td> " +
+                "<td> " + " <a href = '#' class='btn btn-warning' onclick = 'EditCustomerRecord(" + customerlist[i].ID + ")'> <span class='glyphicon glyphicon-edit'></span></a> " + "</td> " +
+                "<td> " + " <a href = '#' class='btn btn-danger' onclick = 'DeleteCustomerRecord(" + customerlist[i].ID + ")'> <span class='glyphicon glyphicon-trash'></span></a> " + "</td> " +
+                "</tr> ";
+            SetData.append(Data);
+        }
+    }
+
+    //Function to save new customer to the database.
+    function AddNewCustomer() {
+         //for showing the loader image when user is saving the product, it get's activated on submit button click.
+        $("#loaderDiv").show();
+        var formdata = $("#formCustomer").serialize();
+        $.ajax({
+
+            type: "POST",
+            url: "/Customers/CreateCustomer",
+            data: formdata,
+            success: function () {
+                $("#loaderDiv").hide();
+                $("#MyCustomer").modal('hide');
+                // for redirecting to landing page after data submission is completed
+                window.location.href = "/Customers/Index";
+            },
+            error: function () {
+
+            }
+        });
+    }
+
+    //Edit popup model open form and display the item to be edited/updated.
+    function EditCustomerRecord(id) {
+
+        var url = "/Customers/GetCustomerRecord";
+        $("#MyCustomerEdit").modal();
+        $.ajax({
+            type: "GET",
+            url: url,
+            data:
+                {
+                    ID: id
+                },
+            success: function (data) {
+                $("#EditCustomerName").val(data.Name);
+                $("#EditCustomerAddress").val(data.Address);
+                $("#EditCustomerID").val(data.ID);
+            },
+            error: function (data) {
+            }
+        });
+
+    }
+
+    //Save edited data.
+    function SaveCustomer() {
+        $("#loaderDivEdit").show();
+        var formdata = $("#formEditCustomer").serialize();
+        $.ajax({
+            type: "POST",
+            url: "/Customers/EditCustomerRecord",
+            data: formdata,
+            success: function () {
+                $("#loaderDivEdit").hide();
+                $("#MyCustomerEdit").modal('hide');
+                // for redirecting to landing page after data submission is completed
+                window.location.href = "/Customers/Index";
+            },
+            error: function (data) {
+                alert(data.responseText)
+            }
+        });
+    }
+
+    //Get confirmation whether product can be deleted or not.
+    function DeleteCustomerRecord(id) {
+
+        $("#errorMessageText").text("")
+        $(".btn-success").prop('disabled', false)
+        var url = "/Customers/Delete";
+        $("#MyCustomerDelete").modal();
+        $.ajax({
+            type: "GET",
+            url: url,
+            data:
+                {
+                    ID: id
+                },
+            success: function (data) {
+
+                if (data.isExist == false) {
+                    $("#errorMessageText").text("Sorry you cannot delete this Customers");
+                    $(".btn-success").prop('disabled', true)
+                }
+                $("#DeleteCustomerName").text(data.customerViewModel.Name);
+                $("#DeleteCustomerAddress").text(data.customerViewModel.Address);
+                $("#DeleteCustomerID").text(data.customerViewModel.ID);
+            },
+            error: function (data) {
+                alert(Data.responseText)
+            }
+        });
+
+    }
+
+    // Delete the customer record.
+    function DeleteCustomer() {
+
+        var productID = $("#DeleteCustomerID").text()
+        var url = "/Customers/DeleteConfirmed";
+        $.ajax({
+            type: "POST",
+            url: url,
+            data:
+                {
+                    ID: productID
+                },
+            success: function (data) {
+                $("#MyCustomerDelete").modal('hide');
+                // for redirecting to landing page after data submission is completed
+                window.location.href = "/Customers/Index";
+            },
+            error: function (data) {
+                alert(Data.responseText)
+            }
+        });
+    }
+</script>
+
+
+

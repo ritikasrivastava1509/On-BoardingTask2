@@ -1,0 +1,291 @@
+﻿@model IEnumerable<PROJECT2_CRUD_JQUERY_AJAX.Models.ProductViewModel>
+
+@{
+    ViewBag.Title = "Index";
+
+}
+
+
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+<script src="~/Scripts/bootstrap.min.js"></script>
+
+<h2>Products</h2>
+
+<div class="container" style="margin-top:3%">
+    <a href="#" class="btn btn-primary" data-target="#MyProduct" data-toggle="modal"> Add New Product</a> <br> <br />
+
+    @*for designing the popup modal with bootstrap classes*@
+
+    <div class="modal fade" id="MyProduct">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h4 id="ModalTitle">Product</h4>
+                </div>
+                <div class="modal-body">
+                    @*for adding the table columns in the form of textbox to the popup using html.textbox*@
+
+
+                    <input class="form-control" id="ProductName" placeholder="Name*" />
+
+                    <input class="form-control" id="ProductPrice" placeholder="Price*" />
+
+
+                </div>
+                <div style="text-align:center;display:none" id="loaderDiv">
+                    <img src="~/Content/loader.gif" width="250" />
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input type="reset" onclick="AddNewProduct()" value="Submit" class="btn btn-success" id="btnSubmit" />
+                </div>
+
+            </div>>
+        </div>
+    </div>
+    <div class="modal fade" id="MyProductEdit">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h4>Product Edit</h4>
+                </div>
+                <div class="modal-body">
+                    @*@using (Html.BeginForm())
+                        {
+                            @Html.AntiForgeryToken()*@
+                    <form id="formEditProduct">
+                        @*@Html.ValidationSummary(true, "", new { @class = "text-danger" })*@
+                        @Html.Hidden("ID", null, new { @id = "EditProductID", @class = "form-contorl", @placeholder = "ID*" })
+                        @*for adding the table columns in the form of textbox to the popup using html.textbox*@
+                        <div class="form-group">
+                            @Html.TextBox("Name", null, new { @id = "EditProductName", @class = "form-contorl", @placeholder = "Name*" })<br />
+                        </div>
+
+                        <div class="form-group">
+                            @Html.TextBox("Price", null, new { @id = "EditProductPrice", @class = "form-contorl", @placeholder = "Price*" })<br />
+                        </div>
+
+                        @*for displaying the loading windows, by default the style has to be set as display:none*@
+                        <div style="text-align:center;display:none" id="loaderDivEdit">
+                            <img src="~/Content/loader.gif" width="250" />
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                            <input type="reset" onclick="SaveProduct()" value="Submit" class="btn btn-success" id="btnSubmit" />
+                        </div>
+                    </form>
+                    @*}*@
+                </div>
+            </div>>
+        </div>
+    </div>
+
+    <div class="modal fade" id="MyProductDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h4>Product Delete</h4>
+                </div>
+                <label id="errorMessageText"></label>
+                <input type="hidden" id="DeleteProductID" />
+                <dl class="dl-horizontal">
+                    <dt>
+                        <label>Name</label>
+                    </dt>
+                    <dd>
+                        <label id="DeleteProductName"></label>
+                    </dd>
+                    <dt>
+                        <label>Price</label>
+                    </dt>
+                    <dd>
+                        <label id="DeleteProductPrice"></label>
+                    </dd>
+                </dl>
+
+                @*for displaying the loading windows, by default the style has to be set as display:none*@
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input type="submit" onclick="DeleteProduct()" value="Delete" class="btn btn-success" id="btnSubmit" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<table class="table">
+    <tr>
+        <th>
+            Name
+        </th>
+        <th>
+            Price
+        </th>
+        <th></th>
+    </tr>
+    <tbody id="productList"></tbody>
+</table>
+
+<script>
+    //For binding the data using jquery and creating html at runtime based on the data receievd from the server
+    $.get("/Products/GetProductList", null, BindProductData);
+
+    // Binding the product list on the landing page
+    function BindProductData(productlist) {
+
+        var SetData = $("#productList");
+        for (var i = 0; i < productlist.length; i++) {
+            // for creating row using jquery and populating values to the table rows.
+            var Data = "<tr Class ='row_" + productlist[i].ID + "'>" +
+                "<td> " + productlist[i].Name + "</td> " +
+                "<td> " + productlist[i].Price + "</td> " +
+                "<td> " + " <a href = '#' class='btn btn-warning' onclick = 'EditProductRecord(" + productlist[i].ID + ")'> <span class='glyphicon glyphicon-edit'></span></a> " + "</td> " +
+                "<td> " + " <a href = '#' class='btn btn-danger' onclick = 'DeleteProductRecord(" + productlist[i].ID + ")'> <span class='glyphicon glyphicon-trash'></span></a> " + "</td> " +
+                "</tr> ";
+            SetData.append(Data);
+        }
+    }
+
+    //Function to save new product to the database.
+    function AddNewProduct() {
+        //for showing the loader image when user is saving the product, it get's activated on submit button click.
+        $("#loaderDiv").show();
+        var name = $("#ProductName").val();
+        var price = $("#ProductPrice").val();
+
+        //Validate
+        if ($("#ProductName").val().length > 2 && $("#ProductName").val().length < 10) {
+            alert("Enter a valid name");
+            $("#loaderDiv").hide();
+            return;
+        }
+        //if ($("#ProductPrice").val() > 0.05 && $("#ProductPrice").val() < 100) {
+        //    alert("Price should be between 0.05 and 100");
+        //    $("#loaderDiv").hide();
+        //    return;
+        //}
+
+
+        var formdata = {
+            Name: name,
+            Price: price
+        }
+
+        $.ajax({
+
+            type: "POST",
+            url: "/Products/CreateProduct",
+            data: formdata,
+            success: function () {
+                $("#loaderDiv").hide();
+                $("#MyProduct").modal('hide');
+                // for redirecting to landing page after data submission is completed
+                window.location.href = "/Products/Index";
+            },
+            error: function () {
+
+            }
+        });
+    }
+
+    //Edit popup model open form and display the item to be edited/updated.
+    function EditProductRecord(id) {
+
+        var url = "/Products/GetProductRecord";
+        $("#MyProductEdit").modal();
+        $.ajax({
+            type: "GET",
+            url: url,
+            data:
+                {
+                    ID: id
+                },
+            success: function (data) {
+                $("#EditProductName").val(data.Name);
+                $("#EditProductPrice").val(data.Price);
+                $("#EditProductID").val(data.ID);
+            },
+            error: function (data) {
+            }
+        });
+
+    }
+
+    //Save edited data.
+    function SaveProduct() {
+        $("#loaderDivEdit").show();
+        var formdata = $("#formEditProduct").serialize();
+        $.ajax({
+            type: "POST",
+            url: "/Products/EditProductRecord",
+            data: formdata,
+            success: function () {
+                $("#loaderDivEdit").hide();
+                $("#MyProductEdit").modal('hide');
+                // for redirecting to landing page after data submission is completed
+                window.location.href = "/Products/Index";
+            },
+            error: function (data) {
+                alert(data.responseText)
+            }
+        });
+    }
+
+    //Get confirmation whether product can be deleted or not.
+    function DeleteProductRecord(id) {
+
+        $("#errorMessageText").text("")
+        $(".btn-success").prop('disabled', false)
+        var url = "/Products/Delete";
+        $("#MyProductDelete").modal();
+        $.ajax({
+            type: "GET",
+            url: url,
+            data:
+                {
+                    ID: id
+                },
+            success: function (data) {
+
+                if (data.isExist == false) {
+                    $("#errorMessageText").text("Sorry you cannot delete this product");
+                    $(".btn-success").prop('disabled', true)
+                }
+                $("#DeleteProductName").text(data.productViewModel.Name);
+                $("#DeleteProductPrice").text(data.productViewModel.Price);
+                $("#DeleteProductID").text(data.productViewModel.ID);
+            },
+            error: function (data) {
+                alert(Data.responseText)
+            }
+        });
+
+    }
+
+    // Delete the product record.
+    function DeleteProduct() {
+
+        var productID = $("#DeleteProductID").text()
+        var url = "/Products/DeleteConfirmed";
+        $.ajax({
+            type: "POST",
+            url: url,
+            data:
+                {
+                    ID: productID
+                },
+            success: function (data) {
+                debugger;
+                $("#MyProductDelete").modal('hide');
+                // for redirecting to landing page after data submission is completed
+                window.location.href = "/Products/Index";
+            },
+            error: function (data) {
+                alert(Data.responseText)
+            }
+        });
+    }
+</script>
