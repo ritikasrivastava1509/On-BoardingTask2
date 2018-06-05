@@ -14,6 +14,7 @@ namespace PROJECT2_CRUD_JQUERY_AJAX.Controllers
     {
         private MVCEntities db = new MVCEntities();
 
+        //Comment: my first commit
         // GET: Products
         public ActionResult Index()
         {
