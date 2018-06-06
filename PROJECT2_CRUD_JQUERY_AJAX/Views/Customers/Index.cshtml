@@ -18,21 +18,12 @@
                     <h4 id="ModalTitle">Customer</h4>
                 </div>
                 <div class="modal-body">
-                    <form id="formCustomer">
-                        <div class="form-group">
-                            @Html.Hidden("ID", null, new { @id = "CustomerID", @class = "form-contorl", @placeholder = "ID*", })
-                            </div>
-                            <div class="form-group">
-                                @Html.TextBox("Name", null, new { @id = "CustomerName", @class = "form-contorl", @placeholder = "Name*" })<br />
-                            </div>
-                            <div class="form-group">
-                                @Html.TextBox("Address", null, new { @id = "Address", @class = "form-contorl", @placeholder = "Address*" })<br />
-
-                            </div>
-                    </form>
-                </div>
-
                 
+                    <span id="createNameError" class="text-danger"></span>
+                    <input type="text" class="form-control" id="CustomerName" placeholder="Name*" />
+                    <span id="createAddressError" class="text-danger"></span>
+                    <input type="text" class="form-control" id="CustomerAddress" placeholder="Address*" />
+                </div>
                 <div style="text-align:center;display:none" id="loaderDiv">
                     <img src="~/Content/loader.gif" width="250" />
                 </div>
@@ -40,8 +31,7 @@
                     <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
                     <input type="reset" onclick="AddNewCustomer()" value="Submit" class="btn btn-success" id="btnSubmit" />
                 </div>
-
-            </div>>
+            </div>
         </div>
     </div>
     <div class="modal fade" id="MyCustomerEdit">
@@ -52,36 +42,27 @@
                     <h4>Customer Edit</h4>
                 </div>
                 <div class="modal-body">
-                    @*@using (Html.BeginForm())
-                        {
-                            @Html.AntiForgeryToken()*@
-                    <form id="formEditCustomer">
-                        @*@Html.ValidationSummary(true, "", new { @class = "text-danger" })*@
-                        @Html.Hidden("ID", null, new { @id = "EditCustomerID", @class = "form-contorl", @placeholder = "ID*",  })
-                        @*for adding the table columns in the form of textbox to the popup using html.textbox*@
-                        <div class="form-group">
-                            @Html.TextBox("Name", null, new { @id = "EditCustomerName", @class = "form-contorl", @placeholder = "Name*", MinLengthAttributeAdapter = "3", MaxLengthAttributeAdapter="10" })<br />
-                        </div>
 
-                        <div class="form-group">
-                            @Html.TextBox("Address", null, new { @id = "EditCustomerAddress", @class = "form-contorl", @placeholder = "Address*", MinLengthAttributeAdapter="3", MaxLengthAttributeAdapter="50" })<br />
-                        </div>
-
-                        
-                        <div style="text-align:center;display:none" id="loaderDivEdit">
-                            <img src="~/Content/loader.gif" width="250" />
-                        </div>
-                        <div class="modal-footer">
-                            <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
-                            <input type="reset" onclick="SaveCustomer()" value="Submit" class="btn btn-success" id="btnSubmit" />
-                        </div>
-                    </form>
-                    @*}*@
+                    <input type="hidden" id="EditCustomerID" />
+                    <div class="form-group">
+                        <span id="editNameError" class="text-danger"></span>
+                        <input type="text" class="form-control" id="EditCustomerName" placeholder="Name*" />
+                    </div>
+                    <div class="form-group">
+                        <span id="editAddressError" class="text-danger"></span>
+                        <input type="text" class="form-control" id="EditCustomerAddress" placeholder="Address*" />
+                    </div>
+                    <div style="text-align:center;display:none" id="loaderDivEdit">
+                        <img src="~/Content/loader.gif" width="250" />
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                        <input type="reset" onclick="SaveCustomer()" value="Submit" class="btn btn-success" id="btnSubmit" />
+                    </div>
                 </div>
-            </div>>
+            </div>
         </div>
-    </div>
-
+        </div>
     <div class="modal fade" id="MyCustomerDelete">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -92,7 +73,7 @@
                 <div class="modal-body">
                     <form id="formDeleteCustomer">
                         @Html.Hidden("ID", null, new { @id = "DeleteCustomerID", @class = "form-contorl", @placeholder = "ID*" })
-                        
+
                         <dl class="dl-horizontal">
                             <dt>
                                 <label id="errorMessage"></label>
@@ -105,8 +86,6 @@
                             </dt>
                             <dd>
                                 <label id="DeleteCustomerName"></label>
-
-
                             </dd>
                             <dt>
                                 <label>Address</label>
@@ -114,7 +93,6 @@
                             <dd>
                                 <label id="DeleteCustomerAddress"></label>
                             </dd>
-
                         </dl>
                         @*for displaying the loading windows, by default the style has to be set as display:none*@
                         <div class="modal-footer">
@@ -145,7 +123,7 @@
 
     // Binding the customer list on the landing page
     function BindCustomerData(customerlist) {
-       
+
         var SetData = $("#customerList");
         for (var i = 0; i < customerlist.length; i++) {
             // for creating row using jquery and populating values to the table rows.
@@ -161,16 +139,34 @@
 
     //Function to save new customer to the database.
     function AddNewCustomer() {
-         //for showing the loader image when user is saving the product, it get's activated on submit button click.
-        $("#loaderDiv").show();
-        var formdata = $("#formCustomer").serialize();
-        $.ajax({
+        //for showing the loader image when user is saving the product, it get's activated on submit button click.
+        var name = $("#CustomerName").val();
+        var address = $("#CustomerAddress").val();
+        //Validate
+        if (name.length < 2 || name.length > 10) {
+            $("#createNameError").text("Enter a valid name");
+            return;
+        }
+        else {
+            $("#createNameError").text("");
+        }
+        if (address.length < 2 || address.length > 50) {
+            $("#createAddressError").text("Enter a valid Address");
+            return;
+        }
+        else {
+            $("#createAdressError").text("");
+        }
+        var formdata = {
+            Name: name,
+            Address: address
+        }
 
+        $.ajax({
             type: "POST",
             url: "/Customers/CreateCustomer",
             data: formdata,
             success: function () {
-                $("#loaderDiv").hide();
                 $("#MyCustomer").modal('hide');
                 // for redirecting to landing page after data submission is completed
                 window.location.href = "/Customers/Index";
@@ -180,7 +176,6 @@
             }
         });
     }
-
     //Edit popup model open form and display the item to be edited/updated.
     function EditCustomerRecord(id) {
 
@@ -206,14 +201,36 @@
 
     //Save edited data.
     function SaveCustomer() {
-        $("#loaderDivEdit").show();
-        var formdata = $("#formEditCustomer").serialize();
+        var name = $("EditCustomerName").val().length;
+        var address = $("EditCustomerAddress").val().length;
+        var id = $("EditCustomerID").val();
+        //validate
+        if (name.length < 2 || name.length > 10) {
+            $("#editNameError").text("Enter a valid name");
+            return;
+        }
+        else {
+            $("#editNameError").text("");
+        }
+        if (address.length < 2 || address.length > 50) {
+            $("#editAddressError").text("Enter a valid Address");
+            return;
+        }
+        else {
+            $("#editAddressError").text("");
+        }
+
         $.ajax({
             type: "POST",
             url: "/Customers/EditCustomerRecord",
-            data: formdata,
+            data:
+                {
+                    ID: id,
+                    Name: name,
+                    Address: address
+                },
             success: function () {
-                $("#loaderDivEdit").hide();
+
                 $("#MyCustomerEdit").modal('hide');
                 // for redirecting to landing page after data submission is completed
                 window.location.href = "/Customers/Index";

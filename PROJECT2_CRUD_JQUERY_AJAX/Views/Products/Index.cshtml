@@ -27,12 +27,10 @@
                 <div class="modal-body">
                     @*for adding the table columns in the form of textbox to the popup using html.textbox*@
 
-
+                    <span id="createNameError" class="text-danger"></span>
                     <input class="form-control" id="ProductName" placeholder="Name*" />
-
+                    <span id="createPriceError" class="text-danger"></span>
                     <input class="form-control" id="ProductPrice" placeholder="Price*" />
-
-
                 </div>
                 <div style="text-align:center;display:none" id="loaderDiv">
                     <img src="~/Content/loader.gif" width="250" />
@@ -53,33 +51,25 @@
                     <h4>Product Edit</h4>
                 </div>
                 <div class="modal-body">
-                    @*@using (Html.BeginForm())
-                        {
-                            @Html.AntiForgeryToken()*@
-                    <form id="formEditProduct">
-                        @*@Html.ValidationSummary(true, "", new { @class = "text-danger" })*@
-                        @Html.Hidden("ID", null, new { @id = "EditProductID", @class = "form-contorl", @placeholder = "ID*" })
-                        @*for adding the table columns in the form of textbox to the popup using html.textbox*@
-                        <div class="form-group">
-                            @Html.TextBox("Name", null, new { @id = "EditProductName", @class = "form-contorl", @placeholder = "Name*" })<br />
-                        </div>
-
-                        <div class="form-group">
-                            @Html.TextBox("Price", null, new { @id = "EditProductPrice", @class = "form-contorl", @placeholder = "Price*" })<br />
-                        </div>
-
-                        @*for displaying the loading windows, by default the style has to be set as display:none*@
-                        <div style="text-align:center;display:none" id="loaderDivEdit">
-                            <img src="~/Content/loader.gif" width="250" />
-                        </div>
-                        <div class="modal-footer">
-                            <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
-                            <input type="reset" onclick="SaveProduct()" value="Submit" class="btn btn-success" id="btnSubmit" />
-                        </div>
-                    </form>
-                    @*}*@
+                    <input type="hidden" id="EditProductID" />
+                    <div class="form-group">
+                        <span id="editNameError" class="text-danger"></span>
+                        <input type="text" id="EditProductName" placeholder="Name*" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <span id="editPriceError" class="text-danger"></span>
+                        <input type="text" id="EditProductPrice" placeholder="Price*" class="form-control" />
+                    </div>
+                    @*for displaying the loading windows, by default the style has to be set as display:none*@
+                    <div style="text-align:center;display:none" id="loaderDivEdit">
+                        <img src="~/Content/loader.gif" width="250" />
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                        <input type="reset" onclick="SaveProduct()" value="Submit" class="btn btn-success" id="btnSubmit" />
+                    </div>
                 </div>
-            </div>>
+            </div>
         </div>
     </div>
 
@@ -152,35 +142,34 @@
     //Function to save new product to the database.
     function AddNewProduct() {
         //for showing the loader image when user is saving the product, it get's activated on submit button click.
-        $("#loaderDiv").show();
         var name = $("#ProductName").val();
         var price = $("#ProductPrice").val();
 
         //Validate
-        if ($("#ProductName").val().length > 2 && $("#ProductName").val().length < 10) {
-            alert("Enter a valid name");
-            $("#loaderDiv").hide();
+        if (name.length < 2 || name.length > 10) {
+            $("#createNameError").text("Enter a valid name");
             return;
         }
-        //if ($("#ProductPrice").val() > 0.05 && $("#ProductPrice").val() < 100) {
-        //    alert("Price should be between 0.05 and 100");
-        //    $("#loaderDiv").hide();
-        //    return;
-        //}
-
-
+        else {
+            $("#createNameError").text("");
+        }
+        if (price < 0.05 || price > 100) {
+            $("#createPriceError").text("Enter a valid price");
+            return;
+        }
+        else {
+            $("#createPriceError").text("");
+        }
         var formdata = {
             Name: name,
             Price: price
         }
-
         $.ajax({
 
             type: "POST",
             url: "/Products/CreateProduct",
             data: formdata,
             success: function () {
-                $("#loaderDiv").hide();
                 $("#MyProduct").modal('hide');
                 // for redirecting to landing page after data submission is completed
                 window.location.href = "/Products/Index";
@@ -216,15 +205,36 @@
 
     //Save edited data.
     function SaveProduct() {
-        $("#loaderDivEdit").show();
-        var formdata = $("#formEditProduct").serialize();
+
+        var name = $("#EditProductName").val();
+        var price = $("#EditProductPrice").val();
+        var id = $("#EditProductID").val();
+        //validate
+        if (name.length < 2 || name.length > 10) {
+            $("#editNameError").text("Enter a valid name");
+            return;
+        }
+        else {
+            $("#editNameError").text("");
+        }
+        if (price < 0.05 || price > 100) {
+            $("#editPriceError").text("Enter a valid price");
+            return;
+        }
+        else {
+            $("#editPriceError").text("");
+        }
         $.ajax({
             type: "POST",
             url: "/Products/EditProductRecord",
-            data: formdata,
+            data:
+                {
+                    ID: id,
+                    Name: name,
+                    Price: price
+                },
             success: function () {
                 $("#loaderDivEdit").hide();
-                $("#MyProductEdit").modal('hide');
                 // for redirecting to landing page after data submission is completed
                 window.location.href = "/Products/Index";
             },
@@ -278,7 +288,7 @@
                     ID: productID
                 },
             success: function (data) {
-                debugger;
+
                 $("#MyProductDelete").modal('hide');
                 // for redirecting to landing page after data submission is completed
                 window.location.href = "/Products/Index";
