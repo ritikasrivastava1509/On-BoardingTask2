@@ -201,9 +201,9 @@
 
     //Save edited data.
     function SaveCustomer() {
-        var name = $("EditCustomerName").val().length;
-        var address = $("EditCustomerAddress").val().length;
-        var id = $("EditCustomerID").val();
+        var name = $("#EditCustomerName").val();
+        var address = $("#EditCustomerAddress").val();
+        var id = $("#EditCustomerID").val();
         //validate
         if (name.length < 2 || name.length > 10) {
             $("#editNameError").text("Enter a valid name");

@@ -20,19 +20,12 @@
                     <h4 id="ModalTitle">Store</h4>
                 </div>
                 <div class="modal-body">
-                    <form id="formStore">
 
-                        <div class="form-group">
-                            @Html.TextBox("Name", null, new { @id = "StoreName", @class = "form-contorl", @placeholder = "Name*" })<br />
-                        </div>
-                        <div class="form-group">
-                            @Html.TextBox("Address", null, new { @id = "Address", @class = "form-contorl", @placeholder = "Address*" })<br />
-
-                        </div>
-                    </form>
+                    <span id="createNameError" class="text-danger"></span>
+                    <input type="text" class="form-control" id="StoreName" placeholder="Name*" />
+                    <span id="createAddressError" class="text-danger"></span>
+                    <input type="text" class="form-control" id="StoreAddress" placeholder="Address*" />
                 </div>
-
-
                 <div style="text-align:center;display:none" id="loaderDiv">
                     <img src="~/Content/loader.gif" width="250" />
                 </div>
@@ -52,29 +45,22 @@
                     <h4>Store Edit</h4>
                 </div>
                 <div class="modal-body">
-                    @*@using (Html.BeginForm())
-                        {
-                            @Html.AntiForgeryToken()*@
-                    <form id="formEditStore">
-                        @*@Html.ValidationSummary(true, "", new { @class = "text-danger" })*@
-                        @Html.Hidden("ID", null, new { @id = "EditStoreID", @class = "form-contorl", @placeholder = "ID*" })
-                        @*for adding the table columns in the form of textbox to the popup using html.textbox*@
-                        <div class="form-group">
-                            @Html.TextBox("Name", null, new { @id = "EditStoreName", @class = "form-contorl", @placeholder = "Name*" })<br />
-                        </div>
-
-                        <div class="form-group">
-                            @Html.TextBox("Address", null, new { @id = "EditStoreAddress", @class = "form-contorl", @placeholder = "Address*" })<br />
-                        </div>
-                        <div style="text-align:center;display:none" id="loaderDivEdit">
-                            <img src="~/Content/loader.gif" width="250" />
-                        </div>
-                        <div class="modal-footer">
-                            <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
-                            <input type="reset" onclick="SaveStore()" value="Submit" class="btn btn-success" id="btnEditSave" />
-                        </div>
-                    </form>
-                    @*}*@
+                    <input type="hidden" id="EditStoreID" />
+                    <div class="form-group">
+                        <span id="editNameError" class="text-danger"></span>
+                        <input type="text" class="form-control" id="EditStoreName" placeholder="Name*" />
+                    </div>
+                    <div class="form-group">
+                        <span id="editAddressError" class="text-danger"></span>
+                        <input type="text" class="form-control" id="EditStoreAddress" placeholder="Address*" />
+                    </div>
+                    <div style="text-align:center;display:none" id="loaderDivEdit">
+                        <img src="~/Content/loader.gif" width="250" />
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                        <input type="reset" onclick="SaveStore()" value="Submit" class="btn btn-success" id="btnEditSave" />
+                    </div>
                 </div>
             </div>>
         </div>
@@ -103,8 +89,6 @@
                             </dt>
                             <dd>
                                 <label id="DeleteStoreName"></label>
-
-
                             </dd>
                             <dt>
                                 <label>Address</label>
@@ -158,9 +142,27 @@
 
     //Function to save new store to the database.
     function AddNewStore() {
-        //for showing the loader image when user is saving the product, it get's activated on submit button click.
-        $("#loaderDiv").show();
-        var formdata = $("#formStore").serialize();
+        var name = $("#StoreName").val();
+        var address = $("#StoreAddress").val();
+        //Validate
+        if (name.length < 2 || name.length > 10) {
+            $("#createNameError").text("Enter a valid name");
+            return;
+        }
+        else {
+            $("#createNameError").text("");
+        }
+        if (address.length < 2 || address.length > 50) {
+            $("#createAddressError").text("Enter a valid Address");
+            return;
+        }
+        else {
+            $("#createAdressError").text("");
+        }
+        var formdata = {
+            Name: name,
+            Address: address
+        }
         $.ajax({
 
             type: "POST",
@@ -203,12 +205,35 @@
 
     //Save edited data.
     function SaveStore() {
-        $("#loaderDivEdit").show();
-        var formdata = $("#formEditStore").serialize();
+        var name = $("#EditStoreName").val();
+        var address = $("#EditStoreAddress").val();
+        var id = $("#EditStoreID").val();
+        //validate
+        if (name.length < 2 || name.length > 10) {
+            $("#editNameError").text("Enter a valid name");
+            return;
+        }
+        else {
+            $("#editNameError").text("");
+        }
+        if (address.length < 2 || address.length > 50) {
+            $("#editAddressError").text("Enter a valid Address");
+            return;
+        }
+        else {
+            $("#editAddressError").text("");
+        }
+
         $.ajax({
             type: "POST",
             url: "/Stores/EditStoreRecord",
-            data: formdata,
+            data:
+
+                {
+                    ID: id,
+                    Name: name,
+                    Address: address
+                },
             success: function () {
                 $("#loaderDivEdit").hide();
                 $("#MyStoreEdit").modal('hide');
